@@ -36,12 +36,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ServiceWorkerProvider />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-white focus:text-black focus:font-semibold"
+        >
+          Skip to content
+        </a>
         <WalletProvider>
           <I18nProvider>
             {/* pb-20 on mobile gives room for the fixed BottomNav; md:pb-0 removes it on desktop */}
-            <div className="flex flex-1 flex-col pb-20 md:pb-0">
+            <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col pb-20 md:pb-0 outline-none">
               {children}
-            </div>
+            </main>
             <Footer />
             <BottomNav />
             <Toaster richColors position="top-right" />
