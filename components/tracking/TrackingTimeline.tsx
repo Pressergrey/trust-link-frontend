@@ -66,8 +66,7 @@ export default function TrackingTimeline({
   loading = false,
 }: TrackingTimelineProps) {
   const { t, i18n } = useTranslation();
-  const [escrow, setEscrow] = useState<Escrow>(initialEscrow);
-  const { escrow: fetchedEscrow, isLoading, error: fetchError, refetch } = useEscrow(escrowId, {
+  const { escrow, isLoading, error: fetchError, refetch } = useEscrow(escrowId, {
     initialData: initialEscrow,
     refreshInterval: 30000,
   });
@@ -75,25 +74,34 @@ export default function TrackingTimeline({
   const [localError, setLocalError] = useState<Error | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  // Sync state with SWR
   useEffect(() => {
-    if (fetchedEscrow) {
-      setEscrow(fetchedEscrow);
+    if (!escrow) {
+      return;
     }
-  }, [fetchedEscrow]);
+
+    const interval = setInterval(async () => {
+      try {
+        await refetch();
+      } catch (err) {
+        console.error("Failed to refresh escrow status:", err);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [escrowId, refetch]);
 
   const handleConfirmDelivery = async () => {
     setIsConfirming(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/escrows/${escrowId}/confirm`, {
-        method: 'POST',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/escrows/${escrowId}/confirm`, {
+        method: "POST",
       });
       if (!response.ok) throw new Error('Failed to confirm delivery');
 
       await refetch();
       track("delivery_confirmed", { escrowId });
     } catch (err) {
-      setLocalError(err instanceof Error ? err : new Error('Failed to confirm delivery'));
+      setLocalError(err instanceof Error ? err : new Error("Failed to confirm delivery"));
     } finally {
       setIsConfirming(false);
     }
@@ -210,35 +218,35 @@ export default function TrackingTimeline({
                       <Icon className="h-6 w-6" />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1">
-                      <p
-                        className={`text-base font-semibold ${
-                          isCompleted || isCurrent
-                            ? "text-zinc-950 dark:text-zinc-100"
-                            : "text-zinc-500 dark:text-zinc-500"
-                        }`}
-                      >
-                        {t(stage.titleKey)}
-                      </p>
-                      <p
-                        className={`mt-1 text-sm ${
-                          isCompleted || isCurrent
-                            ? "text-zinc-600 dark:text-zinc-400"
-                            : "text-zinc-400 dark:text-zinc-600"
-                        }`}
-                      >
-                        {t(stage.descriptionKey)}
-                      </p>
-                      {isCurrent && activeEscrow.updatedAt && (
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                          {new Intl.DateTimeFormat(i18n.language, {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          }).format(new Date(activeEscrow.updatedAt))}
-                        </p>
-                      )}
-                    </div>
+                {/* Content */}
+                <div className="flex-1">
+                  <p
+                    className={`text-base font-semibold ${
+                      isCompleted || isCurrent
+                        ? "text-zinc-950 dark:text-zinc-100"
+                        : "text-zinc-500 dark:text-zinc-500"
+                    }`}
+                  >
+                    {t(stage.titleKey)}
+                  </p>
+                  <p
+                    className={`mt-1 text-sm ${
+                      isCompleted || isCurrent
+                        ? "text-zinc-600 dark:text-zinc-400"
+                        : "text-zinc-400 dark:text-zinc-600"
+                    }`}
+                  >
+                    {t(stage.descriptionKey)}
+                  </p>
+                  {isCurrent && activeEscrow.updatedAt && (
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                      {new Intl.DateTimeFormat(i18n.language, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(activeEscrow.updatedAt))}
+                    </p>
+                  )}
+                </div>
 
                     {/* Status indicator */}
                     {isCompleted && (
