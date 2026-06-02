@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NetworkProvider } from "@/components/providers/NetworkProvider";
 import { WalletProvider } from "@/components/providers/WalletProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import I18nProvider from "@/components/providers/I18nProvider";
@@ -59,10 +60,11 @@ export default function RootLayout({
               </main>
               <Footer />
               <BottomNav />
-              <Toaster richColors position="top-right" />
+              <Toaster position="top-right" theme="system" />
             </I18nProvider>
           </NotificationProvider>
         </WalletProvider>
+        <CommandPalette />
         <Toaster position="bottom-right" />
       </body>
     </html>

@@ -6,6 +6,7 @@ import { Escrow, EscrowStatus } from "@/types";
 import { CheckCircle2, Circle, Clock, Package, Truck, Home } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEscrow } from "@/hooks/useEscrow";
+import { track } from "@/lib/analytics";
 
 interface TrackingStage {
   id: string;
@@ -95,9 +96,10 @@ export default function TrackingTimeline({
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/escrows/${escrowId}/confirm`, {
         method: "POST",
       });
-      if (!response.ok) throw new Error("Failed to confirm delivery");
+      if (!response.ok) throw new Error('Failed to confirm delivery');
 
       await refetch();
+      track("delivery_confirmed", { escrowId });
     } catch (err) {
       setLocalError(err instanceof Error ? err : new Error("Failed to confirm delivery"));
     } finally {
